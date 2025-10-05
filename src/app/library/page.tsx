@@ -21,9 +21,9 @@ export default async function LibraryPage({
   const genres = await getGenres();
 
   return (
-    <div className="container mx-auto p-4 md:p-8">
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-3xl font-bold">Biblioteca</h1>
+    <div className="container mx-auto">
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-4xl font-bold font-serif">Biblioteca</h1>
         <Button asChild>
           <Link href="/add-book">
             <PlusCircle className="mr-2 h-4 w-4" />
