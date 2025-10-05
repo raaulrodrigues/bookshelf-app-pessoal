@@ -26,10 +26,14 @@ const formSchema = z.object({
 export async function getBooks({
   query,
   genre,
+  sortBy,
 }: {
   query?: string;
   genre?: string;
+  sortBy?: string;
 } = {}) {
+  const [field = "createdAt", direction = "desc"] = sortBy?.split("_") ?? [];
+
   const books = await prisma.book.findMany({
     where: {
       genreName: genre || undefined,
@@ -40,7 +44,7 @@ export async function getBooks({
           ]
         : undefined,
     },
-    orderBy: { createdAt: "desc" },
+    orderBy: { [field]: direction },
     include: { genre: true },
   });
   return books;

@@ -16,6 +16,15 @@ interface LibraryControlsProps {
   genres: Genre[];
 }
 
+const sortOptions = [
+  { value: 'createdAt_desc', label: 'Mais Recentes' },
+  { value: 'title_asc', label: 'Título (A-Z)' },
+  { value: 'title_desc', label: 'Título (Z-A)' },
+  { value: 'rating_desc', label: 'Melhor Avaliados' },
+  { value: 'year_desc', label: 'Lançamento (Mais Novo)' },
+  { value: 'year_asc', label: 'Lançamento (Mais Antigo)' },
+];
+
 export function LibraryControls({ genres }: LibraryControlsProps) {
   const searchParams = useSearchParams();
   const pathname = usePathname();
@@ -31,12 +40,12 @@ export function LibraryControls({ genres }: LibraryControlsProps) {
     replace(`${pathname}?${params.toString()}`);
   }, 300);
 
-  const handleGenreChange = (genre: string) => {
+  const handleFilterChange = (value: string, filter: 'genre' | 'sortBy') => {
     const params = new URLSearchParams(searchParams);
-    if (genre && genre !== "all") {
-      params.set("genre", genre);
+    if (value && value !== "all") {
+      params.set(filter, value);
     } else {
-      params.delete("genre");
+      params.delete(filter);
     }
     replace(`${pathname}?${params.toString()}`);
   };
@@ -51,7 +60,7 @@ export function LibraryControls({ genres }: LibraryControlsProps) {
         defaultValue={searchParams.get("query")?.toString()}
       />
       <Select
-        onValueChange={handleGenreChange}
+        onValueChange={(value) => handleFilterChange(value, 'genre')}
         defaultValue={searchParams.get("genre")?.toString()}
       >
         <SelectTrigger className="w-full sm:w-[200px]">
@@ -62,6 +71,21 @@ export function LibraryControls({ genres }: LibraryControlsProps) {
           {genres.map((genre) => (
             <SelectItem key={genre.name} value={genre.name}>
               {genre.name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <Select
+        onValueChange={(value) => handleFilterChange(value, 'sortBy')}
+        defaultValue={searchParams.get("sortBy")?.toString()}
+      >
+        <SelectTrigger className="w-full sm:w-[200px]">
+          <SelectValue placeholder="Ordenar por" />
+        </SelectTrigger>
+        <SelectContent>
+          {sortOptions.map((option) => (
+            <SelectItem key={option.value} value={option.value}>
+              {option.label}
             </SelectItem>
           ))}
         </SelectContent>

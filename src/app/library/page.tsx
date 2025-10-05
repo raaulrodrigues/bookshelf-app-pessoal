@@ -12,12 +12,14 @@ export default async function LibraryPage({
   searchParams?: {
     query?: string;
     genre?: string;
+    sortBy?: string;
   };
 }) {
   const query = searchParams?.query;
   const genre = searchParams?.genre;
+  const sortBy = searchParams?.sortBy;
 
-  const books = await getBooks({ query, genre });
+  const books = await getBooks({ query, genre, sortBy });
   const genres = await getGenres();
 
   return (

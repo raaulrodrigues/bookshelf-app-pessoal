@@ -18,6 +18,9 @@ model Book {
   synopsis    String?
   isbn        String?
   notes       String?
+  publisher   String?
+  language    String?
+  series      String?
   currentPage Int      @default(0)
   status      String   @default("QUERO_LER")
   createdAt   DateTime @default(now())
