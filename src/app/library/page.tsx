@@ -1,77 +1,54 @@
-"use client";
-
-import { useState } from "react";
+import { getBooks, getGenres } from "@/lib/actions";
 import { BookCard } from "@/components/book/BookCard";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { initialBooks } from "@/data/books";
-import { Book } from "@/types";
+import { Button } from "@/components/ui/button";
+import { PlusCircle } from "lucide-react";
+import Link from "next/link";
+import { LibraryControls } from "@/components/book/LibraryControls";
+import { Book } from "@prisma/client";
 
-const genres = [
-  "Todos",
-  "Literatura Brasileira",
-  "Ficção Científica",
-  "Realismo Mágico",
-  "Fantasia",
-  "Programação",
-];
+export default async function LibraryPage({
+  searchParams,
+}: {
+  searchParams?: {
+    query?: string;
+    genre?: string;
+  };
+}) {
+  const query = searchParams?.query;
+  const genre = searchParams?.genre;
 
-export default function LibraryPage() {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedGenre, setSelectedGenre] = useState("Todos");
-
-  const filteredBooks = initialBooks.filter((book: Book) => {
-    const matchesSearch =
-      book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      book.author.toLowerCase().includes(searchTerm.toLowerCase());
-
-    const matchesGenre =
-      selectedGenre === "Todos" || book.genre === selectedGenre;
-
-    return matchesSearch && matchesGenre;
-  });
+  const books = await getBooks({ query, genre });
+  const genres = await getGenres();
 
   return (
-    <div>
-      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-3xl font-bold tracking-tight">Minha Biblioteca</h1>
-        <div className="flex flex-col gap-4 sm:flex-row sm:w-auto w-full">
-          <Input
-            placeholder="Buscar por título ou autor..."
-            className="sm:w-64"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-          <Select onValueChange={setSelectedGenre} defaultValue="Todos">
-            <SelectTrigger className="sm:w-48">
-              <SelectValue placeholder="Filtrar por gênero" />
-            </SelectTrigger>
-            <SelectContent>
-              {genres.map((genre) => (
-                <SelectItem key={genre} value={genre}>
-                  {genre}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+    <div className="container mx-auto p-4 md:p-8">
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-3xl font-bold">Biblioteca</h1>
+        <Button asChild>
+          <Link href="/add-book">
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Adicionar Livro
+          </Link>
+        </Button>
       </div>
 
-      {filteredBooks.length > 0 ? (
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {filteredBooks.map((book) => (
-            <BookCard key={book.id} book={book} />
+      <LibraryControls genres={genres} />
+
+      {books.length > 0 ? (
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+          {books.map((book) => (
+            <BookCard
+              key={book.id}
+              book={book as Book & { genre: { name: string } | null }}
+            />
           ))}
         </div>
       ) : (
-        <div className="flex h-64 items-center justify-center rounded-md border border-dashed">
-          <p className="text-muted-foreground">Nenhum livro encontrado.</p>
+        <div className="text-center py-16 border-2 border-dashed rounded-lg">
+          <h2 className="text-xl font-semibold">Nenhum livro encontrado</h2>
+          <p className="text-muted-foreground mt-2">
+            Tente ajustar sua busca ou filtro.
+          </p>
         </div>
       )}
     </div>

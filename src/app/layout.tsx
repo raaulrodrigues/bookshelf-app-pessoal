@@ -1,13 +1,16 @@
+// src/app/layout.tsx
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/layout/Header";
+import { Toaster } from "@/components/ui/sonner";
+import { ThemeProvider } from "@/components/ThemeProvider";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "BookShelf",
-  description: "Gerencie sua biblioteca pessoal de livros.",
+  description: "Sua biblioteca pessoal",
 };
 
 export default function RootLayout({
@@ -16,10 +19,18 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR">
+    <html lang="pt-BR" suppressHydrationWarning>
       <body className={inter.className}>
-        <Header />
-        <main className="container mx-auto p-4">{children}</main>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <Header />
+          <main>{children}</main>
+          <Toaster richColors />
+        </ThemeProvider>
       </body>
     </html>
   );

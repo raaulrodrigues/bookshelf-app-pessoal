@@ -1,69 +1,68 @@
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { initialBooks } from "@/data/books";
+// src/app/page.tsx
+import { getBooks } from "@/lib/actions";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Book, CheckCircle, Hourglass, Bookmark } from "lucide-react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
-export default function DashboardPage() {
-  const totalBooks = initialBooks.length;
-  const readingNow = initialBooks.filter(
-    (book) => book.status === "LENDO"
-  ).length;
-  const finishedBooks = initialBooks.filter(
-    (book) => book.status === "LIDO"
-  ).length;
+export default async function DashboardPage() {
+  const books = await getBooks();
 
-  const totalPagesRead = initialBooks.reduce((acc, book) => {
-    if (book.status === "LIDO" && book.pages) {
-      return acc + book.pages;
-    }
-    if (book.currentPage) {
-      return acc + book.currentPage;
-    }
-    return acc;
-  }, 0);
+  const totalBooks = books.length;
+  const currentlyReading = books.filter(b => b.status === "LENDO").length;
+  const finishedBooks = books.filter(b => b.status === "LIDO").length;
+  const totalPagesRead = books
+    .filter(b => b.status === "LIDO" || b.status === "LENDO")
+    .reduce((acc, book) => {
+      if (book.status === "LIDO") return acc + (book.pages || 0);
+      return acc + (book.currentPage || 0);
+    }, 0);
 
   return (
-    <div>
-      <h1 className="mb-6 text-3xl font-bold tracking-tight">Dashboard</h1>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="container mx-auto p-4 md:p-8">
+      <h1 className="text-3xl font-bold mb-8">Dashboard</h1>
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
-          <CardHeader>
-            <CardTitle>Total de Livros</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total de Livros</CardTitle>
+            <Book className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <p className="text-4xl font-bold">{totalBooks}</p>
+            <div className="text-2xl font-bold">{totalBooks}</div>
           </CardContent>
         </Card>
-
         <Card>
-          <CardHeader>
-            <CardTitle>Lendo Atualmente</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Lendo Atualmente</CardTitle>
+            <Hourglass className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <p className="text-4xl font-bold">{readingNow}</p>
+            <div className="text-2xl font-bold">{currentlyReading}</div>
           </CardContent>
         </Card>
-
         <Card>
-          <CardHeader>
-            <CardTitle>Livros Finalizados</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Livros Finalizados</CardTitle>
+            <CheckCircle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <p className="text-4xl font-bold">{finishedBooks}</p>
+            <div className="text-2xl font-bold">{finishedBooks}</div>
           </CardContent>
         </Card>
-
         <Card>
-          <CardHeader>
-            <CardTitle>Total de Páginas Lidas</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Páginas Lidas</CardTitle>
+            <Bookmark className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <p className="text-4xl font-bold">{totalPagesRead}</p>
+            <div className="text-2xl font-bold">{totalPagesRead.toLocaleString('pt-BR')}</div>
           </CardContent>
         </Card>
+      </div>
+      <div className="mt-8">
+        <Button asChild>
+          <Link href="/library">Ver Biblioteca Completa</Link>
+        </Button>
       </div>
     </div>
   );

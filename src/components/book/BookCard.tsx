@@ -1,4 +1,4 @@
-import { Book } from "@/types";
+import { Book } from "@prisma/client";
 import {
   Card,
   CardContent,
@@ -6,60 +6,58 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import Image from "next/image";
 import { StarRating } from "./StarRating";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Button } from "../ui/button";
-import { MoreVertical } from "lucide-react";
+import { Eye, FilePenLine } from "lucide-react";
+import { DeleteBookDialog } from "./DeleteBookDialog";
+import Link from "next/link";
 
 interface BookCardProps {
-  book: Book;
+  book: Book & { genre?: { name: string } | null };
 }
 
 export function BookCard({ book }: BookCardProps) {
   return (
-    <Card className="flex flex-col">
-      <CardHeader className="flex-row items-start gap-4 space-y-0 pb-4">
-        <Avatar className="h-24 w-24 rounded-md">
-          <AvatarImage src={book.coverUrl} alt={book.title} />
-          <AvatarFallback className="rounded-md bg-muted text-sm text-muted-foreground">
-            Sem Capa
-          </AvatarFallback>
-        </Avatar>
-        <div className="flex-1">
-          <CardTitle className="mb-1 text-lg leading-tight">{book.title}</CardTitle>
-          <p className="text-sm text-muted-foreground">{book.author}</p>
-          <p className="mt-2 text-xs text-muted-foreground">
-            {book.publicationYear}
-          </p>
-          {book.rating && <StarRating rating={book.rating} className="mt-2" />}
+    <Card className="flex flex-col overflow-hidden transition-all hover:shadow-lg">
+      <CardHeader className="p-0">
+        <div className="relative h-48 w-full">
+          <Image
+            src={book.coverUrl || '/fallback-cover.png'}
+            alt={`Capa do livro ${book.title}`}
+            fill
+            className="object-cover"
+            sizes="(max-width: 768px) 100vw, 33vw"
+          />
         </div>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon">
-              <MoreVertical className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            <DropdownMenuItem>Visualizar</DropdownMenuItem>
-            <DropdownMenuItem>Editar</DropdownMenuItem>
-            <DropdownMenuItem className="text-red-500">Excluir</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
       </CardHeader>
-      <CardContent className="flex-grow">
-        <p className="text-sm text-muted-foreground line-clamp-3">
-          {book.synopsis}
+      <CardContent className="flex-grow p-4">
+        {book.genre?.name && (
+          <Badge variant="outline" className="mb-2">
+            {book.genre.name}
+          </Badge>
+        )}
+        <CardTitle className="mb-1 text-lg leading-tight line-clamp-2">{book.title}</CardTitle>
+        <p className="text-sm text-muted-foreground line-clamp-1">
+          {book.author} {book.year && `(${book.year})`}
         </p>
+        {book.rating && <StarRating rating={book.rating} className="mt-2" />}
       </CardContent>
-      <CardFooter>
-        {book.genre && <Badge variant="outline">{book.genre}</Badge>}
+      <CardFooter className="flex justify-between items-center p-4 pt-0">
+        <Button variant="outline" size="sm" asChild>
+          <Link href={`/library/${book.id}`}>
+            <Eye className="mr-2 h-4 w-4" /> Ver
+          </Link>
+        </Button>
+        <div className="flex gap-2">
+          <Button variant="ghost" size="icon" asChild>
+            <Link href={`/library/${book.id}/edit`}>
+              <FilePenLine className="h-4 w-4" />
+            </Link>
+          </Button>
+          <DeleteBookDialog bookId={book.id} />
+        </div>
       </CardFooter>
     </Card>
   );
