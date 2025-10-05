@@ -27,7 +27,7 @@ export function BookCard({ book }: BookCardProps) {
             src={book.coverUrl || '/fallback-cover.png'}
             alt={`Capa do livro ${book.title}`}
             fill
-            className="object-cover"
+            className="object-contain"
             sizes="(max-width: 768px) 100vw, 33vw"
           />
         </div>

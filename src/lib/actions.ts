@@ -7,11 +7,11 @@ import { redirect } from "next/navigation";
 import { Book } from "@prisma/client";
 import { notFound } from "next/navigation";
 
-const bookFormSchema = z.object({
+const formSchema = z.object({
   id: z.string().optional(),
-  title: z.string().min(2),
-  author: z.string().min(2),
-  coverUrl: z.string().url().optional().or(z.literal('')),
+  title: z.string().min(2, { message: "O título precisa ter pelo menos 2 caracteres." }),
+  author: z.string().min(2, { message: "O autor precisa ter pelo menos 2 caracteres." }),
+  coverUrl: z.string().optional(),
   year: z.coerce.number().optional(),
   pages: z.coerce.number().optional(),
   rating: z.coerce.number().min(0).max(5).optional(),
@@ -49,6 +49,18 @@ export async function getBooks({
 export async function getGenres() {
   const genres = await prisma.genre.findMany({
     orderBy: { name: "asc" },
+    include: {
+      _count: {
+        select: { books: true },
+      },
+      books: {
+        take: 4,
+        select: {
+          coverUrl: true,
+          id: true,
+        },
+      },
+    },
   });
   return genres;
 }
@@ -65,12 +77,14 @@ export async function getBook(id: string) {
   }
 }
 
-export async function saveBook(formData: FormData) {
+export async function saveBook(prevState: any, formData: FormData) {
   const data = Object.fromEntries(formData.entries());
-  const validatedFields = bookFormSchema.safeParse(data);
+  const validatedFields = formSchema.safeParse(data);
 
   if (!validatedFields.success) {
-    throw new Error("Validation failed");
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+    };
   }
 
   const { id, genreName, ...bookData } = validatedFields.data;
@@ -85,20 +99,13 @@ export async function saveBook(formData: FormData) {
             create: { name: genreName },
           },
         }
-      : {
-          disconnect: true,
-        },
+      : undefined,
   };
-  
+
   if (id) {
-    await prisma.book.update({
-      where: { id },
-      data: dataToSave,
-    });
+    await prisma.book.update({ where: { id }, data: dataToSave });
   } else {
-    await prisma.book.create({
-      data: dataToSave,
-    });
+    await prisma.book.create({ data: dataToSave });
   }
 
   revalidatePath("/library");

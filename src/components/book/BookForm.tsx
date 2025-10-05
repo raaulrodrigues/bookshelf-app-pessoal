@@ -1,14 +1,6 @@
 "use client";
 
-import { useForm } from "react-hook-form";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { useFormState, useFormStatus } from "react-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,9 +11,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { genres } from "@/types";
+import { genres, type ReadingStatus } from "@/types";
 import { saveBook } from "@/lib/actions";
-import { Book, ReadingStatus } from "@prisma/client";
+import { type Book } from "@prisma/client";
+import { Label } from "@/components/ui/label";
 
 const readingStatuses: ReadingStatus[] = [
   "QUERO_LER",
@@ -35,147 +28,103 @@ interface BookFormProps {
   book?: Book & { genre?: { name: string } | null };
 }
 
+type FormState = {
+  errors?: {
+    title?: string[];
+    author?: string[];
+    coverUrl?: string[];
+    pages?: string[];
+    rating?: string[];
+    notes?: string[];
+  };
+};
+
+function SubmitButton({ isEditing }: { isEditing: boolean }) {
+  const { pending } = useFormStatus();
+  return (
+    <Button type="submit" disabled={pending} aria-disabled={pending}>
+      {pending
+        ? "Salvando..."
+        : isEditing
+        ? "Salvar Alterações"
+        : "Adicionar Livro"}
+    </Button>
+  );
+}
+
 export function BookForm({ book }: BookFormProps) {
-  const form = useForm();
+  const initialState: FormState = { errors: {} };
+  const [state, dispatch] = useFormState(saveBook, initialState);
 
   return (
-    <Form {...form}>
-      <form action={saveBook} className="space-y-8">
-        {book && <input type="hidden" name="id" value={book.id} />}
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <FormField
-            control={form.control}
-            name="title"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Título *</FormLabel>
-                <FormControl>
-                  <Input placeholder="Clean Code" {...field} required defaultValue={book?.title}/>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="author"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Autor *</FormLabel>
-                <FormControl>
-                  <Input placeholder="Robert C. Martin" {...field} required defaultValue={book?.author}/>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+    <form action={dispatch} className="space-y-8">
+      {book && <input type="hidden" name="id" value={book.id} />}
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="space-y-2">
+          <Label htmlFor="title">Título *</Label>
+          <Input id="title" name="title" placeholder="Clean Code" required defaultValue={book?.title} />
+          {state?.errors?.title && <p className="text-sm text-destructive mt-1">{state.errors.title.join(", ")}</p>}
         </div>
-        <FormField
-            control={form.control}
-            name="coverUrl"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>URL da Capa</FormLabel>
-                <FormControl>
-                  <Input placeholder="https://..." {...field} defaultValue={book?.coverUrl ?? ''} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          <FormField
-            control={form.control}
-            name="status"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Status</FormLabel>
-                <Select name={field.name} defaultValue={book?.status ?? "QUERO_LER"}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione o status" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {readingStatuses.map((s) => (
-                      <SelectItem key={s} value={s}>{s.replace(/_/g, " ")}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-           <FormField
-            control={form.control}
-            name="genreName"
-            render={({ field }) => (
-                <FormItem>
-                <FormLabel>Gênero</FormLabel>
-                <Select name={field.name} defaultValue={book?.genre?.name}>
-                    <FormControl>
-                    <SelectTrigger>
-                        <SelectValue placeholder="Selecione o gênero" />
-                    </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                    {genres.map((g) => (
-                        <SelectItem key={g} value={g}>{g}</SelectItem>
-                    ))}
-                    </SelectContent>
-                </Select>
-                <FormMessage />
-                </FormItem>
-            )}
-            />
-          <FormField
-            control={form.control}
-            name="pages"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Páginas</FormLabel>
-                <FormControl>
-                  <Input type="number" placeholder="464" {...field} defaultValue={book?.pages ?? ''}/>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="rating"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Nota (1-5)</FormLabel>
-                <FormControl>
-                  <Input type="number" min={1} max={5} placeholder="5" {...field} defaultValue={book?.rating ?? ''}/>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+        <div className="space-y-2">
+          <Label htmlFor="author">Autor *</Label>
+          <Input id="author" name="author" placeholder="Robert C. Martin" required defaultValue={book?.author} />
+          {state?.errors?.author && <p className="text-sm text-destructive mt-1">{state.errors.author.join(", ")}</p>}
         </div>
-        <FormField
-            control={form.control}
-            name="notes"
-            render={({ field }) => (
-                <FormItem>
-                <FormLabel>Notas Pessoais</FormLabel>
-                <FormControl>
-                    <Textarea
-                    placeholder="Suas anotações sobre o livro..."
-                    className="resize-y"
-                    {...field}
-                    defaultValue={book?.notes ?? ''}
-                    />
-                </FormControl>
-                <FormMessage />
-                </FormItem>
-            )}
-          />
-        <Button type="submit">{book ? "Salvar Alterações" : "Adicionar Livro"}</Button>
-      </form>
-    </Form>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="coverUrl">URL da Capa</Label>
+        <Input id="coverUrl" name="coverUrl" placeholder="https://..." defaultValue={book?.coverUrl ?? ""} />
+        {state?.errors?.coverUrl && <p className="text-sm text-destructive mt-1">{state.errors.coverUrl.join(", ")}</p>}
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="space-y-2">
+          <Label htmlFor="status">Status</Label>
+          <Select name="status" defaultValue={book?.status ?? "QUERO_LER"}>
+            <SelectTrigger id="status">
+              <SelectValue placeholder="Selecione o status" />
+            </SelectTrigger>
+            <SelectContent>
+              {readingStatuses.map((s) => (
+                <SelectItem key={s} value={s}>{s.replace(/_/g, " ")}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="genreName">Gênero</Label>
+          <Select name="genreName" defaultValue={book?.genre?.name}>
+            <SelectTrigger id="genreName">
+              <SelectValue placeholder="Selecione o gênero" />
+            </SelectTrigger>
+            <SelectContent>
+              {genres.map((g) => (
+                <SelectItem key={g} value={g}>{g}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="pages">Páginas</Label>
+          <Input id="pages" name="pages" type="number" placeholder="464" defaultValue={book?.pages ?? ""} />
+          {state?.errors?.pages && <p className="text-sm text-destructive mt-1">{state.errors.pages.join(", ")}</p>}
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="rating">Nota (1-5)</Label>
+          <Input id="rating" name="rating" type="number" min={1} max={5} placeholder="5" defaultValue={book?.rating ?? ""} />
+          {state?.errors?.rating && <p className="text-sm text-destructive mt-1">{state.errors.rating.join(", ")}</p>}
+        </div>
+      </div>
+      
+      <div className="space-y-2">
+        <Label htmlFor="notes">Notas Pessoais</Label>
+        <Textarea id="notes" name="notes" placeholder="Suas anotações sobre o livro..." className="resize-y" defaultValue={book?.notes ?? ""} />
+        {state?.errors?.notes && <p className="text-sm text-destructive mt-1">{state.errors.notes.join(", ")}</p>}
+      </div>
+
+      <SubmitButton isEditing={!!book} />
+    </form>
   );
 }
