@@ -1,4 +1,3 @@
-// src/components/book/DeleteBookDialog.tsx
 "use client";
 
 import {
