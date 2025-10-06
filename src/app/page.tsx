@@ -1,9 +1,10 @@
-// src/app/page.tsx
 import { getBooks } from "@/lib/actions";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Book, CheckCircle, Hourglass, Bookmark } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+
+export const dynamic = 'force-dynamic';
 
 export default async function DashboardPage() {
   const books = await getBooks();
@@ -14,13 +15,14 @@ export default async function DashboardPage() {
   const totalPagesRead = books
     .filter(b => b.status === "LIDO" || b.status === "LENDO")
     .reduce((acc, book) => {
-      if (book.status === "LIDO") return acc + (book.pages || 0);
-      return acc + (book.currentPage || 0);
+      if (book.status === "LIDO" && book.pages) return acc + book.pages;
+      if (book.status === "LENDO" && book.currentPage) return acc + book.currentPage;
+      return acc;
     }, 0);
 
   return (
     <div className="container mx-auto p-4 md:p-8">
-      <h1 className="text-3xl font-bold mb-8">Dashboard</h1>
+      <h1 className="text-3xl font-bold mb-8 font-serif">Dashboard</h1>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
