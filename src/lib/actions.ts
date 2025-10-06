@@ -39,8 +39,8 @@ export async function getBooks({
       genreName: genre || undefined,
       OR: query
         ? [
-            { title: { contains: query } },
-            { author: { contains: query } },
+            { title: { contains: query, mode: "insensitive" } },
+            { author: { contains: query, mode: "insensitive" } },
           ]
         : undefined,
     },
