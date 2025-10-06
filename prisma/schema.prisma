@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -15,9 +15,9 @@ model Book {
   year        Int?
   pages       Int?
   rating      Int?
-  synopsis    String?
+  synopsis    String? @db.Text
   isbn        String?
-  notes       String?
+  notes       String? @db.Text
   publisher   String?
   language    String?
   series      String?
@@ -30,6 +30,6 @@ model Book {
 }
 
 model Genre {
-  name  String @id @unique
+  name  String  @id @unique
   books Book[]
 }
