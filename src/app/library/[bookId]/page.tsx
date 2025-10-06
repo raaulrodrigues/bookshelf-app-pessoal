@@ -43,16 +43,16 @@ export default async function BookDetailsPage({
             {book.rating && <StarRating rating={book.rating} />}
           </div>
 
-          <div className="md:col-span-2 space-y-8 pt-4 text-white">
+          <div className="md:col-span-2 space-y-8 pt-4">
             <div>
               {book.series && <p className="text-primary font-semibold">{book.series}</p>}
               <div className="flex items-baseline gap-4">
-                <h1 className="text-4xl font-serif font-bold">{book.title}</h1>
+                <h1 className="text-4xl font-serif font-bold text-white">{book.title}</h1>
                 {book.year && (
-                  <Link href={`/library?year=${book.year}`} className="text-xl text-muted-foreground hover:text-foreground transition-colors">{book.year}</Link>
+                  <Link href={`/library?year=${book.year}`} className="text-xl text-neutral-400 hover:text-white transition-colors">{book.year}</Link>
                 )}
               </div>
-              <p className="text-lg text-muted-foreground mt-1">
+              <p className="text-lg text-neutral-400 mt-1">
                 Por {book.author}
               </p>
             </div>
@@ -60,7 +60,7 @@ export default async function BookDetailsPage({
             {book.synopsis && (
               <div className="border-t border-border/50 pt-6">
                 <h2 className="font-serif text-xl font-semibold mb-2">Sinopse</h2>
-                <p className="text-foreground/80 whitespace-pre-wrap">{book.synopsis}</p>
+                <p className="text-muted-foreground whitespace-pre-wrap">{book.synopsis}</p>
               </div>
             )}
 
