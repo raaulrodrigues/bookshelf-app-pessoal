@@ -1,83 +1,81 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { searchGoogleBooks } from "@/lib/actions";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import Image from "next/image";
-import { Loader2, Search } from "lucide-react";
-
-type BookSearchResult = Awaited<ReturnType<typeof searchGoogleBooks>>[0];
+import { useState } from 'react';
+import Image from 'next/image';
+import {
+  BookFromGoogle,
+  searchGoogleBooks,
+} from '@/app/actions/searchGoogleBooks';
 
 interface BookSearchProps {
-  onBookSelect: (book: BookSearchResult) => void;
+  onBookSelect: (book: BookFromGoogle) => Promise<void>;
 }
 
 export function BookSearch({ onBookSelect }: BookSearchProps) {
-  const [query, setQuery] = useState("");
-  const [results, setResults] = useState<BookSearchResult[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState<BookFromGoogle[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [addedBooks, setAddedBooks] = useState<Set<string>>(new Set());
 
-  const handleSearch = async () => {
+  const handleSearch = async (event: React.FormEvent) => {
+    event.preventDefault();
     if (!query) return;
-    setIsLoading(true);
-    setError(null);
-    try {
-      const books = await searchGoogleBooks(query);
-      setResults(books);
-      if (books.length === 0) {
-        setError("Nenhum livro encontrado para esta busca.");
-      }
-    } catch (err) {
-      setError("Ocorreu um erro ao buscar os livros.");
-    } finally {
-      setIsLoading(false);
-    }
+    setLoading(true);
+    setAddedBooks(new Set());
+    const books = await searchGoogleBooks(query);
+    setResults(books);
+    setLoading(false);
+  };
+
+  const handleSelect = async (book: BookFromGoogle) => {
+    await onBookSelect(book);
+    setAddedBooks((prev) => new Set(prev).add(book.id));
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex w-full items-center space-x-2">
-        <Input
+    <div className="w-full max-w-2xl mx-auto my-8">
+      <form onSubmit={handleSearch} className="flex gap-2 mb-4">
+        <input
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Digite o título ou autor do livro..."
-          onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+          placeholder="Pesquisar por título ou autor..."
+          className="flex-grow p-2 border rounded-md text-black"
         />
-        <Button onClick={handleSearch} disabled={isLoading}>
-          {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
-        </Button>
-      </div>
+        <button
+          type="submit"
+          disabled={loading}
+          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400"
+        >
+          {loading ? 'Buscando...' : 'Buscar'}
+        </button>
+      </form>
 
-      {error && <p className="text-center text-muted-foreground">{error}</p>}
-
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-        {results.map((book, index) => (
-          <button
-            key={index}
-            onClick={() => onBookSelect(book)}
-            className="text-left"
+      <div className="space-y-4">
+        {results.map((book) => (
+          <div
+            key={book.id}
+            className="flex items-center gap-4 p-4 border rounded-md shadow-sm"
           >
-            <Card className="overflow-hidden hover:border-primary transition-all">
-              <div className="relative aspect-[2/3] w-full bg-muted">
-                {book.coverUrl && (
-                  <Image
-                    src={book.coverUrl}
-                    alt={`Capa de ${book.title}`}
-                    fill
-                    className="object-cover"
-                  />
-                )}
-              </div>
-              <CardContent className="p-2">
-                <h3 className="font-semibold text-sm truncate">{book.title}</h3>
-                <p className="text-xs text-muted-foreground truncate">{book.author}</p>
-              </CardContent>
-            </Card>
-          </button>
+            <Image
+              src={book.coverUrl}
+              alt={`Capa do livro ${book.title}`}
+              width={80}
+              height={120}
+              className="object-cover rounded-md"
+            />
+            <div className="flex-grow">
+              <h3 className="text-lg font-bold">{book.title}</h3>
+              <p className="text-gray-400">{book.authors.join(', ')}</p>
+            </div>
+            <button
+              onClick={() => handleSelect(book)}
+              disabled={addedBooks.has(book.id)}
+              className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:bg-gray-500 disabled:cursor-not-allowed"
+            >
+              {addedBooks.has(book.id) ? 'Adicionado' : 'Adicionar'}
+            </button>
+          </div>
         ))}
       </div>
     </div>
