@@ -24,8 +24,10 @@ const readingStatuses: ReadingStatus[] = [
   "ABANDONADO",
 ];
 
+type BookFormData = Partial<Book> & { genreName?: string | null };
+
 interface BookFormProps {
-  book?: Book & { genre?: { name: string } | null };
+  book?: BookFormData;
 }
 
 type FormState = {
@@ -58,7 +60,7 @@ export function BookForm({ book }: BookFormProps) {
 
   return (
     <form action={dispatch} className="space-y-8">
-      {book && <input type="hidden" name="id" value={book.id} />}
+      {book?.id && <input type="hidden" name="id" value={book.id} />}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-2">
@@ -95,7 +97,7 @@ export function BookForm({ book }: BookFormProps) {
         </div>
         <div className="space-y-2">
           <Label htmlFor="genreName">Gênero</Label>
-          <Select name="genreName" defaultValue={book?.genre?.name}>
+          <Select name="genreName" defaultValue={book?.genreName ?? undefined}>
             <SelectTrigger id="genreName">
               <SelectValue placeholder="Selecione o gênero" />
             </SelectTrigger>
@@ -124,7 +126,7 @@ export function BookForm({ book }: BookFormProps) {
         {state?.errors?.notes && <p className="text-sm text-destructive mt-1">{state.errors.notes.join(", ")}</p>}
       </div>
 
-      <SubmitButton isEditing={!!book} />
+      <SubmitButton isEditing={!!book?.id} />
     </form>
   );
 }

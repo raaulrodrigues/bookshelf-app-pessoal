@@ -18,6 +18,9 @@ const formSchema = z.object({
   synopsis: z.string().optional(),
   isbn: z.string().optional(),
   notes: z.string().optional(),
+  publisher: z.string().optional(),
+  language: z.string().optional(),
+  series: z.string().optional(),
   currentPage: z.coerce.number().optional(),
   status: z.enum(["QUERO_LER", "LENDO", "LIDO", "PAUSADO", "ABANDONADO"]),
   genreName: z.string().optional(),
@@ -154,4 +157,44 @@ export async function deleteGenre(name: string) {
 
   revalidatePath("/genres");
   revalidatePath("/library");
+}
+
+export async function searchGoogleBooks(query: string) {
+  if (!query) return [];
+
+  const apiKey = process.env.GOOGLE_BOOKS_API_KEY;
+  if (!apiKey) {
+    throw new Error("Google Books API key is missing");
+  }
+
+  try {
+    const response = await fetch(
+      `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(
+        query
+      )}&maxResults=10&key=${apiKey}`
+    );
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch data from Google Books API");
+    }
+
+    const data = await response.json();
+    if (!data.items) return [];
+
+    const books = data.items.map((item: any) => ({
+      title: item.volumeInfo.title,
+      author: item.volumeInfo.authors ? item.volumeInfo.authors.join(", ") : "Autor desconhecido",
+      year: item.volumeInfo.publishedDate ? parseInt(item.volumeInfo.publishedDate.substring(0, 4)) : undefined,
+      pages: item.volumeInfo.pageCount,
+      synopsis: item.volumeInfo.description,
+      publisher: item.volumeInfo.publisher,
+      coverUrl: item.volumeInfo.imageLinks?.thumbnail || item.volumeInfo.imageLinks?.smallThumbnail || "",
+      genreName: item.volumeInfo.categories ? item.volumeInfo.categories[0] : undefined,
+    }));
+
+    return books;
+  } catch (error) {
+    console.error("Error searching Google Books:", error);
+    return [];
+  }
 }
